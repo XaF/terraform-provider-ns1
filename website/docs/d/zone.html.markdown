@@ -40,3 +40,17 @@ In addition to the argument above, the following are exported:
 * `networks` - List of network IDs for which the zone is available.
 * `dns_servers` - Authoritative Name Servers.
 * `hostmaster` - The SOA Hostmaster.
+* `secondaries` - List of secondary servers. [Secondaries](#secondaries-1) is
+  documented below.
+
+#### Secondaries
+
+A secondary has the following fields:
+
+* `network_ids` - (Optional/Computed) - List of network IDs for which the zone
+  should be made available. Default is network 0, the primary NSONE Global
+  Network.
+* `ip` - (Required) IPv4 address of the secondary server.
+* `port` - (Optional) Port of the the secondary server. Default `53`.
+* `notify` - (Optional) Whether we send `NOTIFY` messages to the secondary host
+  when the zone changes. Default `false`.

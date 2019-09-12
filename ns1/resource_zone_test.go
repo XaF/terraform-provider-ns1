@@ -78,6 +78,34 @@ func TestAccZone_updated(t *testing.T) {
 	})
 }
 
+func TestAccZone_primary(t *testing.T) {
+	var zone dns.Zone
+	zoneName := fmt.Sprintf(
+		"terraform-test-%s.io",
+		acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum),
+	)
+	expected := []*dns.ZoneSecondaryServer{
+		&dns.ZoneSecondaryServer{NetworkIDs: []int{0}, IP: "2.2.2.2", Port: 53, Notify: false},
+		&dns.ZoneSecondaryServer{NetworkIDs: []int{0}, IP: "3.3.3.3", Port: 5353, Notify: true},
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckZoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZonePrimary(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists("ns1_zone.it", &zone),
+					testAccCheckZoneName(&zone, zoneName),
+					testAccCheckZoneSecondary(&zone, 0, expected[0]),
+					testAccCheckZoneSecondary(&zone, 1, expected[1]),
+				),
+			},
+		},
+	})
+}
+
 func TestAccZone_secondary(t *testing.T) {
 	var zone dns.Zone
 	zoneName := fmt.Sprintf(
@@ -91,7 +119,7 @@ func TestAccZone_secondary(t *testing.T) {
 		CheckDestroy: testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccZonePrimary(zoneName),
+				Config: testAccZoneSecondary(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists("ns1_zone.it", &zone),
 					testAccCheckZoneName(&zone, zoneName),
@@ -242,6 +270,28 @@ resource "ns1_zone" "it" {
 }
 
 func testAccZonePrimary(zoneName string) string {
+	return fmt.Sprintf(`resource "ns1_zone" "it" {
+  zone    = "%s"
+  ttl     = 10800
+  refresh = 3600
+  retry   = 300
+  expiry  = 2592000
+  nx_ttl  = 3601
+  secondaries {
+    ip     = "2.2.2.2"
+    notify = false
+    port   = 53
+  }
+  secondaries {
+    ip     = "3.3.3.3"
+    notify = true
+    port   = 5353
+  }
+}
+`, zoneName)
+}
+
+func testAccZoneSecondary(zoneName string) string {
 	return fmt.Sprintf(`resource "ns1_zone" "it" {
   zone    = "%s"
   ttl     = 10800

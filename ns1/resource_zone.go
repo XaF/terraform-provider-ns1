@@ -53,9 +53,10 @@ func resourceZone() *schema.Resource {
 				ForceNew: true,
 			},
 			"primary": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"secondaries"},
 			},
 			"additional_primaries": {
 				Type:     schema.TypeList,
@@ -63,6 +64,7 @@ func resourceZone() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				ConflictsWith: []string{"secondaries"},
 			},
 			"dns_servers": {
 				Type:     schema.TypeString,
@@ -77,6 +79,33 @@ func resourceZone() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
+			},
+			"secondaries": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"primary", "additional_primaries"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"notify": &schema.Schema{
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"port": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"network_ids": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+						},
+					},
+				},
 			},
 		},
 		Create:   resourceZoneCreate,
@@ -100,6 +129,9 @@ func resourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) {
 	if z.Secondary != nil && z.Secondary.Enabled {
 		d.Set("primary", z.Secondary.PrimaryIP)
 		d.Set("additional_primaries", z.Secondary.OtherIPs)
+	}
+	if z.Primary != nil && z.Primary.Enabled {
+		d.Set("secondaries", z.Primary.Secondaries)
 	}
 	if z.Link != nil && *z.Link != "" {
 		d.Set("link", *z.Link)
@@ -144,16 +176,27 @@ func resourceToZoneData(z *dns.Zone, d *schema.ResourceData) {
 			z.Secondary.OtherPorts[i] = 53
 		}
 	}
+	if v, ok := d.GetOk("secondaries"); ok {
+		secondariesSet := v.(*schema.Set)
+		secondaries := make([]dns.ZoneSecondaryServer, secondariesSet.Len())
+		for i, secondaryRaw := range secondariesSet.List() {
+			secondary := secondaryRaw.(map[string]interface{})
+			networkIDSet := secondary["network_ids"].(*schema.Set)
+			secondaries[i] = dns.ZoneSecondaryServer{
+				NetworkIDs: networkIDHelper(networkIDSet),
+				IP:         secondary["ip"].(string),
+				Port:       secondary["port"].(int),
+				Notify:     secondary["notify"].(bool),
+			}
+		}
+		z.MakePrimary(secondaries...)
+	}
 	if v, ok := d.GetOk("link"); ok {
 		z.LinkTo(v.(string))
 	}
 	if v, ok := d.GetOk("networks"); ok {
 		networkIDSet := v.(*schema.Set)
-		networkIDs := make([]int, networkIDSet.Len())
-		for i, networkID := range networkIDSet.List() {
-			networkIDs[i] = networkID.(int)
-		}
-		z.NetworkIDs = networkIDs
+		z.NetworkIDs = networkIDHelper(networkIDSet)
 	}
 }
 
@@ -203,4 +246,13 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceZoneStateFunc(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("zone", d.Id())
 	return []*schema.ResourceData{d}, nil
+}
+
+// translates *schema.Set to []int
+func networkIDHelper(networkIDSet *schema.Set) []int {
+	networkIDs := make([]int, networkIDSet.Len())
+	for i, networkID := range networkIDSet.List() {
+		networkIDs[i] = networkID.(int)
+	}
+	return networkIDs
 }

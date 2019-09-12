@@ -64,6 +64,32 @@ func dataSourceZone() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
+			"secondaries": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"notify": &schema.Schema{
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"port": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"network_ids": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+						},
+					},
+				},
+			},
 		},
 		Read: dataSourceZoneRead,
 	}
@@ -83,6 +109,9 @@ func dataSourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) {
 	if z.Secondary != nil && z.Secondary.Enabled {
 		d.Set("primary", z.Secondary.PrimaryIP)
 		d.Set("additional_primaries", z.Secondary.OtherIPs)
+	}
+	if z.Primary != nil && z.Primary.Enabled {
+		d.Set("secondaries", z.Primary.Secondaries)
 	}
 }
 
