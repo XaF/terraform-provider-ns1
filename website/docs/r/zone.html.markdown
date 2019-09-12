@@ -67,9 +67,9 @@ The following arguments are supported:
 A zone can have zero or more `secondaries`. Note how this is implemented in the
 example above. A secondary has the following fields:
 
-* `network_ids` - (Optional/Computed) - List of network IDs for which the zone
-  should be made available. Default is network 0, the primary NSONE Global
-  Network.
+* `network_ids` - (Optional/Computed) - List of network IDs (`int`) for which
+  the zone should be made available. Default is network 0, the primary NSONE
+  Global Network.
 * `ip` - (Required) IPv4 address of the secondary server.
 * `port` - (Optional) Port of the the secondary server. Default `53`.
 * `notify` - (Optional) Whether we send `NOTIFY` messages to the secondary host

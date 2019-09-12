@@ -86,15 +86,15 @@ func resourceZone() *schema.Resource {
 				ConflictsWith: []string{"primary", "additional_primaries"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip": &schema.Schema{
+						"ip": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"notify": &schema.Schema{
+						"notify": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"port": &schema.Schema{
+						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -183,7 +183,7 @@ func resourceToZoneData(z *dns.Zone, d *schema.ResourceData) {
 			secondary := secondaryRaw.(map[string]interface{})
 			networkIDSet := secondary["network_ids"].(*schema.Set)
 			secondaries[i] = dns.ZoneSecondaryServer{
-				NetworkIDs: networkIDHelper(networkIDSet),
+				NetworkIDs: setToInts(networkIDSet),
 				IP:         secondary["ip"].(string),
 				Port:       secondary["port"].(int),
 				Notify:     secondary["notify"].(bool),
@@ -196,7 +196,7 @@ func resourceToZoneData(z *dns.Zone, d *schema.ResourceData) {
 	}
 	if v, ok := d.GetOk("networks"); ok {
 		networkIDSet := v.(*schema.Set)
-		z.NetworkIDs = networkIDHelper(networkIDSet)
+		z.NetworkIDs = setToInts(networkIDSet)
 	}
 }
 
@@ -249,10 +249,10 @@ func resourceZoneStateFunc(d *schema.ResourceData, meta interface{}) ([]*schema.
 }
 
 // translates *schema.Set to []int
-func networkIDHelper(networkIDSet *schema.Set) []int {
-	networkIDs := make([]int, networkIDSet.Len())
-	for i, networkID := range networkIDSet.List() {
-		networkIDs[i] = networkID.(int)
+func setToInts(schemaSet *schema.Set) []int {
+	ints := make([]int, schemaSet.Len())
+	for i, v := range schemaSet.List() {
+		ints[i] = v.(int)
 	}
-	return networkIDs
+	return ints
 }

@@ -84,9 +84,10 @@ func TestAccZone_primary(t *testing.T) {
 		"terraform-test-%s.io",
 		acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum),
 	)
+	// sorted by IP please
 	expected := []*dns.ZoneSecondaryServer{
 		&dns.ZoneSecondaryServer{NetworkIDs: []int{0}, IP: "2.2.2.2", Port: 53, Notify: false},
-		&dns.ZoneSecondaryServer{NetworkIDs: []int{0}, IP: "3.3.3.3", Port: 5353, Notify: true},
+		&dns.ZoneSecondaryServer{NetworkIDs: []int{1, 2}, IP: "3.3.3.3", Port: 5353, Notify: true},
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -278,14 +279,15 @@ func testAccZonePrimary(zoneName string) string {
   expiry  = 2592000
   nx_ttl  = 3601
   secondaries {
-    ip     = "2.2.2.2"
-    notify = false
-    port   = 53
+    ip          = "2.2.2.2"
+    notify      = false
+    port        = 53
   }
   secondaries {
-    ip     = "3.3.3.3"
-    notify = true
-    port   = 5353
+    network_ids = [1, 2]
+    ip          = "3.3.3.3"
+    notify      = true
+    port        = 5353
   }
 }
 `, zoneName)

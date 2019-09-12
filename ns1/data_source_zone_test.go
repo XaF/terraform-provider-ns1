@@ -48,6 +48,7 @@ func TestAccDataSourceZone_primary(t *testing.T) {
 		"terraform-test-%s.io",
 		acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum),
 	)
+	// sorted by IP please
 	expected := []*dns.ZoneSecondaryServer{
 		&dns.ZoneSecondaryServer{NetworkIDs: []int{0}, IP: "2.2.2.2", Port: 53, Notify: false},
 		&dns.ZoneSecondaryServer{NetworkIDs: []int{0}, IP: "3.3.3.3", Port: 5353, Notify: true},

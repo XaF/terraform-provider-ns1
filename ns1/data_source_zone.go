@@ -69,15 +69,15 @@ func dataSourceZone() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip": &schema.Schema{
+						"ip": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"notify": &schema.Schema{
+						"notify": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"port": &schema.Schema{
+						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
