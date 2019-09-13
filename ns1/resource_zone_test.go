@@ -279,15 +279,15 @@ func testAccZonePrimary(zoneName string) string {
   expiry  = 2592000
   nx_ttl  = 3601
   secondaries {
-    ip          = "2.2.2.2"
-    notify      = false
-    port        = 53
+    ip       = "2.2.2.2"
+    notify   = false
+    port     = 53
   }
   secondaries {
-    network_ids = [1, 2]
-    ip          = "3.3.3.3"
-    notify      = true
-    port        = 5353
+    networks = [1, 2]
+    ip       = "3.3.3.3"
+    notify   = true
+    port     = 5353
   }
 }
 `, zoneName)

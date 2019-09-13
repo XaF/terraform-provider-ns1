@@ -22,7 +22,7 @@ func testAccCheckZoneSecondary(z *dns.Zone, idx int, expected *dns.ZoneSecondary
 		})
 		secondary := secondaries[idx]
 		if len(secondary.NetworkIDs) != len(expected.NetworkIDs) {
-			return fmt.Errorf("Secondaries[%d].NetworkIDs: got: %d want: %d", idx, len(secondary.NetworkIDs), len(expected.NetworkIDs))
+			return fmt.Errorf("Secondaries[%d].NetworkIDs: got: len(%d) want: len(%d)", idx, len(secondary.NetworkIDs), len(expected.NetworkIDs))
 		}
 		sort.Ints(secondary.NetworkIDs)
 		sort.Ints(expected.NetworkIDs)

@@ -66,24 +66,23 @@ func dataSourceZone() *schema.Resource {
 			},
 			"secondaries": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"notify": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Computed: true,
 						},
 						"port": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Computed: true,
 						},
-						"network_ids": &schema.Schema{
+						"networks": &schema.Schema{
 							Type:     schema.TypeSet,
-							Optional: true,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},

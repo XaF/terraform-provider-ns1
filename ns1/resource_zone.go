@@ -92,13 +92,13 @@ func resourceZone() *schema.Resource {
 						},
 						"notify": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
 						},
 						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"network_ids": &schema.Schema{
+						"networks": &schema.Schema{
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -181,7 +181,7 @@ func resourceToZoneData(z *dns.Zone, d *schema.ResourceData) {
 		secondaries := make([]dns.ZoneSecondaryServer, secondariesSet.Len())
 		for i, secondaryRaw := range secondariesSet.List() {
 			secondary := secondaryRaw.(map[string]interface{})
-			networkIDSet := secondary["network_ids"].(*schema.Set)
+			networkIDSet := secondary["networks"].(*schema.Set)
 			secondaries[i] = dns.ZoneSecondaryServer{
 				NetworkIDs: setToInts(networkIDSet),
 				IP:         secondary["ip"].(string),
