@@ -74,6 +74,12 @@ func TestAccZone_updated(t *testing.T) {
 					testAccCheckZoneNxTTL(&zone, 3601),
 				),
 			},
+			{
+				ResourceName:      "ns1_zone.it",
+				ImportState:       true,
+				ImportStateId:     zoneName,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -103,6 +109,12 @@ func TestAccZone_primary(t *testing.T) {
 					testAccCheckZoneSecondary(&zone, 1, expected[1]),
 				),
 			},
+			{
+				ResourceName:      "ns1_zone.it",
+				ImportState:       true,
+				ImportStateId:     zoneName,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -129,6 +141,12 @@ func TestAccZone_secondary(t *testing.T) {
 					resource.TestCheckResourceAttr("ns1_zone.it", "additional_primaries.1", "3.3.3.3"),
 					testAccCheckOtherPorts(&zone, expectedOtherPorts),
 				),
+			},
+			{
+				ResourceName:      "ns1_zone.it",
+				ImportState:       true,
+				ImportStateId:     zoneName,
+				ImportStateVerify: true,
 			},
 		},
 	})
