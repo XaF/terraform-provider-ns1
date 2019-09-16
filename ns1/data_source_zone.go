@@ -111,7 +111,6 @@ func dataSourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) error {
 		d.Set("additional_primaries", z.Secondary.OtherIPs)
 	}
 	if z.Primary != nil && z.Primary.Enabled {
-		fut(fmt.Sprintf("hrmrhmrmrm %v\n", z.Primary.Secondaries))
 		secondaries := make([]map[string]interface{}, 0)
 		for _, secondary := range z.Primary.Secondaries {
 			secondaries = append(secondaries, secondaryToMap(&secondary))
