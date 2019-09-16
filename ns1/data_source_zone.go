@@ -1,6 +1,7 @@
 package ns1
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -94,7 +95,7 @@ func dataSourceZone() *schema.Resource {
 	}
 }
 
-func dataSourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) {
+func dataSourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) error {
 	d.SetId(z.ID)
 	d.Set("hostmaster", z.Hostmaster)
 	d.Set("ttl", z.TTL)
@@ -110,8 +111,17 @@ func dataSourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) {
 		d.Set("additional_primaries", z.Secondary.OtherIPs)
 	}
 	if z.Primary != nil && z.Primary.Enabled {
-		d.Set("secondaries", z.Primary.Secondaries)
+		fut(fmt.Sprintf("hrmrhmrmrm %v\n", z.Primary.Secondaries))
+		secondaries := make([]map[string]interface{}, 0)
+		for _, secondary := range z.Primary.Secondaries {
+			secondaries = append(secondaries, secondaryToMap(&secondary))
+		}
+		err := d.Set("secondaries", secondaries)
+		if err != nil {
+			return fmt.Errorf("[DEBUG] Error setting secondaries for: %s, error: %#v", z.Zone, err)
+		}
 	}
+	return nil
 }
 
 func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
@@ -120,6 +130,8 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	dataSourceZoneToResourceData(d, z)
+	if err := dataSourceZoneToResourceData(d, z); err != nil {
+		return err
+	}
 	return nil
 }

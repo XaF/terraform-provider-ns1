@@ -1,6 +1,7 @@
 package ns1
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -116,7 +117,7 @@ func resourceZone() *schema.Resource {
 	}
 }
 
-func resourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) {
+func resourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) error {
 	d.SetId(z.ID)
 	d.Set("hostmaster", z.Hostmaster)
 	d.Set("ttl", z.TTL)
@@ -131,11 +132,28 @@ func resourceZoneToResourceData(d *schema.ResourceData, z *dns.Zone) {
 		d.Set("additional_primaries", z.Secondary.OtherIPs)
 	}
 	if z.Primary != nil && z.Primary.Enabled {
-		d.Set("secondaries", z.Primary.Secondaries)
+		secondaries := make([]map[string]interface{}, 0)
+		for _, secondary := range z.Primary.Secondaries {
+			secondaries = append(secondaries, secondaryToMap(&secondary))
+		}
+		err := d.Set("secondaries", secondaries)
+		if err != nil {
+			return fmt.Errorf("[DEBUG] Error setting secondaries for: %s, error: %#v", z.Zone, err)
+		}
 	}
 	if z.Link != nil && *z.Link != "" {
 		d.Set("link", *z.Link)
 	}
+	return nil
+}
+
+func secondaryToMap(s *dns.ZoneSecondaryServer) map[string]interface{} {
+	m := make(map[string]interface{})
+	m["ip"] = s.IP
+	m["port"] = s.Port
+	m["notify"] = s.Notify
+	m["networks"] = s.NetworkIDs
+	return m
 }
 
 func resourceToZoneData(z *dns.Zone, d *schema.ResourceData) {
@@ -208,7 +226,9 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, err := client.Zones.Create(z); err != nil {
 		return err
 	}
-	resourceZoneToResourceData(d, z)
+	if err := resourceZoneToResourceData(d, z); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -219,7 +239,9 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	resourceZoneToResourceData(d, z)
+	if err := resourceZoneToResourceData(d, z); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -239,7 +261,9 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 	if _, err := client.Zones.Update(z); err != nil {
 		return err
 	}
-	resourceZoneToResourceData(d, z)
+	if err := resourceZoneToResourceData(d, z); err != nil {
+		return err
+	}
 	return nil
 }
 
